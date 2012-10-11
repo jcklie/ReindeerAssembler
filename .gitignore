@@ -48,3 +48,6 @@ local.properties
 
 #Maven
 target/
+
+#test
+asm/
