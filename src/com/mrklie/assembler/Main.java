@@ -7,6 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Does the job.
+ * 
+ * @author Jan-Christoph Klie
+ */
 public class Main {
 	
 	private static Path path = Paths.get("/home/jan-christoph/git/ReindeerAssembler/asm/Rect.asm");
@@ -23,6 +28,9 @@ public class Main {
 		}
 		
 		Parser p = new Parser(sb.toString());
+		System.out.println(p.getCommand());
+		
+		
 	}
 
 }

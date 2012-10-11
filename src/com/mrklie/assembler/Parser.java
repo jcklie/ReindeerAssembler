@@ -1,9 +1,11 @@
 package com.mrklie.assembler;
 
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 /**
@@ -19,7 +21,7 @@ public class Parser {
 	private String command;
 	private SymbolTable sbt;
 	
-	private enum CommandType {
+	public enum CommandType {
 		A_COMMAND,
 		C_COMMAND,
 		L_COMMAND
@@ -31,7 +33,11 @@ public class Parser {
 	}
 	
 	public void advance() {
-		
+		if( hasMoreCommands() ) {
+			command = data.remove(0);
+		} else {
+			throw new NoSuchElementException();
+		}		
 	}
 	
 	private void parse(String text) {	
@@ -40,13 +46,7 @@ public class Parser {
 		data.removeAll(Arrays.asList("", null));
 
 		prepareLabels();
-		prepareSymbols();
-		
-		int line = 0;
-		for( String s : data) {
-			System.out.println(++line + "\t" + s);
-		}
-		
+		prepareSymbols();		
 	}
 	
 	private String[] format(String text) {		
@@ -60,7 +60,7 @@ public class Parser {
 			if( s.matches("@[a-zA-Z_\\.$:][a-zA-Z_\\.$:0-9]*")) {
 				if( !sbt.contains(s)) {
 					sbt.addEntry(s);
-				}				
+				}
 				data.set(i, "@" + sbt.getAddress(s));			
 			} else if (s.matches("r'\\([a-zA-Z_\\.$:][a-zA-Z_\\.$:0-9]*\\)'")) {
 				data.set(i, "@" + sbt.getAddress(s));	
@@ -74,8 +74,7 @@ public class Parser {
 		for(String s : data) {			
 			if (s.matches("\\([a-zA-Z_\\.$:][a-zA-Z_\\.$:0-9]*\\)")) {
 				if( !sbt.contains(s)) {
-					sbt.addEntry("@"+s.substring(1, s.length()), i);
-					System.out.println("@"+s.substring(1, s.length() - 1) + "\t"+ i);
+					sbt.addEntry("@"+s.substring(1, s.length() - 1), i);
 					toRemove.add(s);
 				}				
 			} else {
@@ -85,24 +84,44 @@ public class Parser {
 		data.removeAll(toRemove);
 	}
 	
-	public boolean hasMoreCommands() {
-		return true;
+	public String getCommand() {
+		return command;
 	}
 	
+	public boolean hasMoreCommands() {
+		return !data.isEmpty();
+	}
+	
+	// @TODO Do match better
 	public CommandType commandType(String s) {
-		switch(s) {
-			
-		}
-		
-		return null;		
+		if( s.startsWith("@")) {
+			return CommandType.A_COMMAND;
+		} else if( s.contains("=") ) {
+			return CommandType.C_COMMAND;
+		} else if( s.matches("\\(.+\\)")) {
+			return CommandType.L_COMMAND;
+		} else {
+			throw new InvalidParameterException();
+		}		
 	}
 	
 	public String symbol(String s) {
-		return null;
+		if( commandType(s).equals(CommandType.L_COMMAND) ) {
+			return s.substring(1, s.length() - 1);
+		} else if( commandType(s).equals(CommandType.A_COMMAND)  ) {
+			return s.substring(1, s.length());
+		}		
+		else {
+			throw new InvalidParameterException();
+		}
 	}
 	
 	public String dest(String s) {
-		return null;
+		if( commandType(s).equals(CommandType.C_COMMAND) ) {
+			return s.substring(1, s.length() - 1);
+		} else {
+			throw new InvalidParameterException();
+		}
 	}
 	
 	public String comp(String s) {
@@ -113,4 +132,8 @@ public class Parser {
 		return null;
 	}
 
+	@Override
+	public String toString() {
+		return "Parser [data=" + data + ", command=" + command + ", sbt=" + sbt + "]";
+	}
 }
