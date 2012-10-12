@@ -91,6 +91,10 @@ public class Code {
 		}
 		return dest.get(s);
 	}
+	
+	public static boolean isDest(String s) {
+		return dest.containsKey(s);
+	}
 
 	/**
 	 * Returns the binary code of the comp mnemonic.
@@ -103,6 +107,10 @@ public class Code {
 		return comp.get(s);
 	}
 
+	public static boolean isComp(String s) {
+		return comp.containsKey(s);
+	}
+	
 	/**
 	 * Returns the binary code of the jump mnemonic.
 	 * @return
@@ -112,6 +120,10 @@ public class Code {
 			return "000";
 		}
 		return jump.get(s);
+	}
+	
+	public static boolean isJump(String s) {
+		return jump.containsKey(s);
 	}
 
 }

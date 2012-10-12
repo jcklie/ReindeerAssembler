@@ -41,13 +41,43 @@ public class Parser {
 		}		
 	}
 	
+	public static void validate(List<String> l) {
+		try {
+			for( String s : l) {
+				switch( Parser.commandType(s)) {
+				case A_COMMAND:
+					if( !isAInstruction(s) ) {
+						throw new InvalidParameterException(s);
+					}
+					break;
+				case C_COMMAND:
+				case J_COMMAND:
+					if( !isCInstruction(s) ) {
+						throw new InvalidParameterException(s);
+					}		
+					break;
+				case L_COMMAND:
+					if( !s.matches("\\([a-zA-Z_\\.$:][a-zA-Z_\\.$:0-9]*\\)") ) {
+						throw new InvalidParameterException(s);
+					}
+					break;
+				default:
+					throw new InvalidParameterException(s);
+				}
+			} 
+		} catch(InvalidParameterException e) {
+			throw new IllegalStateException("Symbol is invalid: " + e.getMessage());
+		}
+	}
+	
 	private void parse(String text) {	
 		data = new LinkedList<String>();
 		Collections.addAll(data, format(text));
 		data.removeAll(Arrays.asList("", null));
 
 		prepareLabels();
-		prepareSymbols();		
+		prepareSymbols();
+		validate(data);
 	}
 	
 	private String[] format(String text) {		
@@ -144,6 +174,24 @@ public class Parser {
 		} else if(commandType(s).equals(CommandType.C_COMMAND)) {
 			return null;
 		}			
+		throw new InvalidParameterException(s);
+	}
+	
+	public static boolean isAInstruction(String s) {
+		s = symbol(s);
+		if( s.matches("\\d{1,5}")) {
+			int i = Integer.parseInt( s);
+			return ( i > 32767 || i < 0 ) ? false : true;
+		}
+		return false;
+	}
+	
+	public static boolean isCInstruction(String s) {
+		if( commandType(s) == CommandType.C_COMMAND) {			
+			return Code.isDest( dest(s)) && Code.isComp( comp(s) ) && jump(s) == null;
+		} else if( commandType(s) == CommandType.J_COMMAND) {
+			return dest(s) == null && Code.isComp( comp(s) ) && Code.isJump( jump(s) );
+		}
 		throw new InvalidParameterException(s);
 	}
 
