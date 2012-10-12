@@ -24,7 +24,8 @@ public class Parser {
 	public enum CommandType {
 		A_COMMAND,
 		C_COMMAND,
-		L_COMMAND
+		L_COMMAND,
+		J_COMMAND
 	}
 	
 	public Parser(String text) {
@@ -93,43 +94,57 @@ public class Parser {
 	}
 	
 	// @TODO Do match better
-	public CommandType commandType(String s) {
+	public static  CommandType commandType(String s) {
 		if( s.startsWith("@")) {
 			return CommandType.A_COMMAND;
 		} else if( s.contains("=") ) {
 			return CommandType.C_COMMAND;
-		} else if( s.matches("\\(.+\\)")) {
+		} else if( s.contains(";")) {
+			return CommandType.J_COMMAND;
+		}else if( s.matches("\\(.+\\)")) {
 			return CommandType.L_COMMAND;
 		} else {
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(s);
 		}		
 	}
 	
-	public String symbol(String s) {
+	public static String symbol(String s) {
 		if( commandType(s).equals(CommandType.L_COMMAND) ) {
 			return s.substring(1, s.length() - 1);
 		} else if( commandType(s).equals(CommandType.A_COMMAND)  ) {
 			return s.substring(1, s.length());
 		}		
 		else {
-			throw new InvalidParameterException();
+			throw new InvalidParameterException(s);
 		}
 	}
 	
-	public String dest(String s) {
+	// @TODO Do match better
+	public static String dest(String s) {
 		if( commandType(s).equals(CommandType.C_COMMAND) ) {
-			return s.substring(1, s.length() - 1);
-		} else {
-			throw new InvalidParameterException();
+			return s.substring(0, s.indexOf('='));
+		} else if(commandType(s).equals(CommandType.J_COMMAND)) {
+			return null;
 		}
+		throw new InvalidParameterException(s);
 	}
 	
-	public String comp(String s) {
-		return null;
+	public static String comp(String s) {
+		if( commandType(s).equals(CommandType.C_COMMAND) ) {
+			return s.substring( s.indexOf("=") + 1, s.length());
+		} else if(commandType(s).equals(CommandType.J_COMMAND)) {
+			return s.substring(0, s.indexOf(';'));
+		}
+		throw new InvalidParameterException(s);
 	}
 	
-	public String jump(String s) {
-		return null;
+	public static String jump(String s) {
+		if( commandType(s).equals(CommandType.J_COMMAND) ) {			
+			return s.substring(s.indexOf(';') + 1, s.length() );			
+		} else if(commandType(s).equals(CommandType.C_COMMAND)) {
+			return null;
+		}			
+		throw new InvalidParameterException(s);
 	}
 
 	@Override
