@@ -9,12 +9,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidParameterException;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+import com.mrklie.assembler.util.PathValidator;
+
 /**
  * Does the job.
  * 
  * @author Jan-Christoph Klie
  */
 public class Assembler {
+	
+	@Parameter(names = {"-i", "--input"}, description = "Specifies the path to input folder (there lays the files to treat).", validateWith = PathValidator.class, required = true)
+	private String inputFolder;
+	
+	@Parameter(names = {"-o", "--output"}, description = "Specifies the path to the output folder (if a save option has been chosen, files will be saved there) .", validateWith = PathValidator.class, required = true)
+	private String outputFolder;
+	
+	@Parameter(names = "--help", help = true)
+	private boolean help;
 	
 	private static String zfill(String s) {
 		int i =  Integer.parseInt(s);
@@ -48,11 +62,10 @@ public class Assembler {
 		}
 		return sb.toString();
 	}
-
-	public static void main(String[] args) throws IOException {
-		
-		Path pathIn = Paths.get("/home/jan-christoph/git/ReindeerCompute/projects/06/pong/Pong.asm");
-		Path pathOut = Paths.get("/home/jan-christoph/git/ReindeerCompute/projects/06/pong/Pong.hack");
+	
+	private void proceed() throws IOException {
+		Path pathIn = Paths.get(inputFolder);
+		Path pathOut = Paths.get(outputFolder);
 		
 		BufferedReader reader = Files.newBufferedReader(pathIn, Charset.defaultCharset());
 		
@@ -66,6 +79,22 @@ public class Assembler {
 		FileWriter fw = new FileWriter( pathOut.toFile());
 		fw.write( exec(sb.toString()));
 		fw.close();
+	}
+
+	public static void main(String[] args) throws IOException {		
+		Assembler assembler = new Assembler();
+		
+		try {
+			JCommander jc = new JCommander(assembler, args);
+
+			if (assembler.help) {
+				jc.usage();
+			} else {
+				assembler.proceed();
+			}
+		} catch (ParameterException e) {
+			System.err.println(e.getMessage());
+		}		
 	}
 
 }
